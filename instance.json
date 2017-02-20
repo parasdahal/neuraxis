@@ -1,0 +1,17 @@
+{
+	"algorithm": "Recommendation",
+	"datasets": [{
+			"name": "ratings",
+			"path": "ratings.csv"
+		}, {
+			"name": "meta",
+			"path": "movies.csv"
+		}
+
+	],
+	"routes": [{
+		"name": "top_recommendation",
+		"route": "/top"
+	}]
+
+}
