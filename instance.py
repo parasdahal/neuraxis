@@ -1,7 +1,8 @@
 import os
 import json
+import argparse
 import importlib
-from dataset import dataset
+from dataset import dataset,sanitizer
 from pyspark import SparkContext, SparkConf
 from jsonschema import validate
 import time, sys, cherrypy
@@ -15,11 +16,11 @@ logger = logging.getLogger("Instance")
 class Instance:
     
     ALGO_PATH = "engine"
-    DATASETS_PATH = "neuraxis"
+    DATASETS_PATH = "storage"
     
     def __init__(self,path):
 
-        self.config = self.load_config(path)
+        self.config = self._load_config(path)
     
     def init_spark_context(self):
 
@@ -28,11 +29,13 @@ class Instance:
         logger.info("Spark Context initialized")
         return context
  
-    def load_config(self,path):
+    def _load_config(self,path):
         
         config_schema = {
+
             "algorithm":{"type" : "string"},
-            "datasets":[{"name":{"type" : "string"},"path":{"type" : "string"}}],
+            "parameters":{"type" : "object"},
+            "datasets":[{"name":{"type" : "string"},"path":{"type" : "string"},"sanitizer":{"type" : "array"}}],
             "routes":[{"name":{"type" : "string"},"route":{"type" : "string"}}]
         }
 
@@ -56,13 +59,21 @@ class Instance:
         for item in self.config['datasets']:
             data = dataset.Dataset()
             path = os.path.join(Instance.DATASETS_PATH,item['path'])
-            data.load_from_csv(path)
+            if('type' in item.keys()):
+                if(item['type'] == "tsv"):
+                    data.load_from_tsv(path)
+                if(item['type'] == "csv"):
+                    data.load_from_csv(path)
+            
+            if('sanitizer' in item.keys()):
+                clean = sanitizer.Sanitizer(data.to_pandas())
+                data.load_from_pandas(clean.pipeline(item['sanitizer']))
             datasets.append(data)
         
         # TODO: check if schema of algo and dataset is valid
 
         context = self.init_spark_context()
-        self.algo_instance = algorithm(context,tuple(datasets))
+        self.algo_instance = algorithm(context,tuple(datasets),self.config['parameters'])
 
         logger.info("A new instance of " + self.config['algorithm'] + "engine started")
         
@@ -82,11 +93,7 @@ class Instance:
         for route in self.config['routes']:
             def handle():
                 return getattr(self.algo_instance,route['name'])(request.get_json())
-            app.add_url_rule(
-                route['route'],
-                route['name'],
-                handle,
-                methods=['POST'])
+            app.add_url_rule(route['route'],route['name'],handle,methods=['POST'])
 
         def run_server(app):
             app_logged = TransLogger(app)
@@ -94,7 +101,7 @@ class Instance:
             cherrypy.config.update({
                 'engine.autoreload.on':True,
                 'log.screen': True,
-                'server.socket_port': 9992,
+                'server.socket_port': 1112,
                 'server.socket_host': '0.0.0.0'
             })
             cherrypy.engine.start()
@@ -103,8 +110,11 @@ class Instance:
         
         run_server(app)
 
-
-ins = Instance('neuraxis/instance.json')
-ins.start()
-ins.train()
-ins.serve()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config", help="Path of the config file.")
+    args = parser.parse_args()
+    ins = Instance(args.config)
+    ins.start()
+    ins.train()
+    ins.serve()

@@ -53,6 +53,17 @@ class Sanitizer():
         
         logger.info("Categorical columns encoded")
     
+    def int_to_double(self):
+        numerics = ['int16', 'int32', 'int64']
+        int_col = []
+        for column in self.dataset.columns.values:
+                if self.dataset[column].dtypes in numerics:
+                    int_col.append(column)
+        
+        self.dataset[int_col] = self.dataset[int_col].astype(float)
+        logger.info("Integers converted to float")
+                    
+
     def normalize_features(self):
 
         scaler = RobustScaler()

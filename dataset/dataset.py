@@ -13,6 +13,10 @@ class Dataset:
         self.dataset = pd.read_csv(path)
         logger.info("Dataset loaded from "+path)
         
+    def load_from_tsv(self,path):
+
+        self.dataset = pd.read_csv(path, delimiter="\t", quoting=3)
+        logger.info("Dataset loaded from "+path)
     
     def load_from_pandas(self,dataframe):
 

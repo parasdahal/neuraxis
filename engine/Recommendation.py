@@ -5,13 +5,15 @@ from pyspark.sql.functions import *
 from pyspark.ml.evaluation import RegressionEvaluator
 import pandas as pd
 
+from algorithm import Algorithm
+
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class Recommendation:
+class Recommendation(Algorithm):
 
-    def __init__(self, sc, datasets):
+    def __init__(self, sc, datasets, parameters):
 
         logger.info("Initializing the Recommendation Engine")
         self.sc = sc
