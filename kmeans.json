@@ -1,0 +1,22 @@
+{
+	"algorithm": "KMeans",
+	
+	"parameters" : {
+		"k":2,
+		"feature_col":["Pclass","Age","SibSp","Parch","Fare"]
+	},
+	
+	"datasets": [{
+			"name": "data",
+			"path": "titanic.csv",
+			"sanitizer": ["replace_missing_values","encode_labels","int_to_double"],
+			"type": "csv"
+		}
+	],
+	
+	"routes": [{
+		"name": "predict",
+		"route": "/predict"
+	}]
+
+}

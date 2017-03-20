@@ -74,7 +74,6 @@ class Instance:
 
         context = self.init_spark_context()
         self.algo_instance = algorithm(context,tuple(datasets),self.config['parameters'])
-
         logger.info("A new instance of " + self.config['algorithm'] + "engine started")
         
     def train(self):
@@ -101,7 +100,7 @@ class Instance:
             cherrypy.config.update({
                 'engine.autoreload.on':True,
                 'log.screen': True,
-                'server.socket_port': 1112,
+                'server.socket_port': 8881,
                 'server.socket_host': '0.0.0.0'
             })
             cherrypy.engine.start()

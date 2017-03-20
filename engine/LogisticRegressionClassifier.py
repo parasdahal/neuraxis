@@ -45,7 +45,6 @@ class LogisticRegressionClassifier(Algorithm):
         logger.info("Training the LR model...")
         model = LogisticRegression(regParam=self.parameters['regParam'],labelCol=self.parameters['label_col'])
         self.model = model.fit(training)
-
         logger.info("LR model built!")
 
     def predict(self,params):
@@ -56,7 +55,7 @@ class LogisticRegressionClassifier(Algorithm):
             prediction_df[item[0]] = pd.Series([item[1]])
         
         # perform sanitization pipeline 
-        prediction_df = sanitizer.Sanitizer(prediction_df).pipeline(["replace_missing_values","encode_labels","normalize_features","int_to_double"])
+        prediction_df = sanitizer.Sanitizer(prediction_df).pipeline(["replace_missing_values","encode_labels","int_to_double"])
         
         # create vector of features using vector assembler
         prediction_df = self._assemble_features(self.sql.createDataFrame(prediction_df),excluded=self.parameters['feature_col'])
