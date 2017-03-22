@@ -1,14 +1,14 @@
 {
-	"algorithm": "KMeans",
+	"algorithm": "Clustering",
 	
 	"parameters" : {
-		"k":2,
-		"feature_col":["Pclass","Age","SibSp","Parch","Fare"]
+		"k":3,
+		"feature_col":["orig_destination_distance","user_location_city","is_mobile","is_package","srch_adults_cnt","srch_children_cnt","srch_rm_cnt"]
 	},
 	
 	"datasets": [{
 			"name": "data",
-			"path": "titanic.csv",
+			"path": "hotel.csv",
 			"sanitizer": ["replace_missing_values","encode_labels","int_to_double"],
 			"type": "csv"
 		}

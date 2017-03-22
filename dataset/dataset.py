@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import pandas as pd
+import _pickle as cPickle
+import gzip
 
 import logging
 logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -23,6 +25,12 @@ class Dataset:
         self.dataset = dataframe
         logger.info("Dataset loaded")
     
+    def load_from_pkl(self,path):
+        f = gzip.open(path,'rb')
+        training_data, validation_data, test_data = cPickle.load(f,encoding='iso-8859-1')
+        f.close()
+        self.dataset = (training_data, validation_data, test_data)
+        logger.info("Dataset loaded from "+path)
 
     def save_to_csv(self,path):
 
@@ -35,24 +43,6 @@ class Dataset:
     def to_numpy(self):
         
         return self.dataset.as_matrix()
-    
-    def training_set(self,numpy=False):
-        
-        self.train = self.dataset.sample(frac=0.8,random_state=200)
-        if numpy:
-            return self.train.as_matrix()
-        else:
-            return self.train
-        
-    def test_set(self,numpy=False):
-        
-        if not hasattr(self, 'train'):
-            self.train = self.dataset.sample(frac=0.8,random_state=200)
-        self.test = self.dataset.drop(self.train.index)
-        if numpy:
-            return self.test.as_matrix()
-        else:
-            return self.test
         
 # if __name__ == "__main__":
 

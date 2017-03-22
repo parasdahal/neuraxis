@@ -64,6 +64,8 @@ class Instance:
                     data.load_from_tsv(path)
                 if(item['type'] == "csv"):
                     data.load_from_csv(path)
+                if(item['type'] == 'pkl'):
+                    data.load_from_pkl(path)
             
             if('sanitizer' in item.keys()):
                 clean = sanitizer.Sanitizer(data.to_pandas())
