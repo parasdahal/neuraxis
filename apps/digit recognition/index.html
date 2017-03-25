@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Handwritten Digit Recognition by Neural Network</title>
+    <script src="jquery.min.js"></script>
+    <link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="contentDiv">
+<center><h1>Handwritten Digit Recognition by Neural Network</h1></center>
+
+<!--<h3 id="toggle">Draw OFF</h3>-->
+<div id="recognizer">
+    <div class="inlineDiv">
+        <div id="drawingCanvasDiv"><canvas id="drawCanvas" width="300" height="300"></canvas></div>
+        <button class="silverButton" onclick="save()" id="clearButton">Predict</button>
+        <button class="silverButton" onclick="javascript:window.location.reload(true)" id="clearButton">Clear</button>
+        
+    </div>
+    <div class="inlineDiv">
+        <div id="guessNumberDiv"></div>
+    </div>
+
+</div>
+
+<p>
+    <script>
+        var c = document.getElementById('drawCanvas');
+        var ctx = c.getContext('2d')
+        var paint = false
+        var hidden = false
+        window.onmousedown = toggle
+        window.onmousemove = draw
+        window.onmouseup = drawoff
+        window.ondblclick = clear
+
+        function toggle() {
+            if (paint) {
+                paint = false;
+            } else {
+                paint = true;
+            }
+        }
+
+        function draw(e) {
+            var rect = c.getBoundingClientRect();
+            if (paint && !hidden) ctx.fillRect(e.x - rect.left, e.y - rect.top, 50, 50)
+        }
+
+        function drawoff() {
+            paint = false;
+            
+        }
+
+        function clear() {
+            ctx.clearRect(0, 0, 500, 500);
+        }
+
+        function save() {
+            var digit = new Image();
+            digit.src = c.toDataURL();
+            ctx.drawImage(digit, 4, 4, 20, 20); // add 4x4 border & shrink
+            hidden = true // is canvas still editable if hidden?
+
+            var imgData = ctx.getImageData(0, 0, 28, 28);
+            var imgBlack = []
+            for (var i = 0; i < imgData.data.length; i += 4) {
+                if (imgData.data[i + 3] === 255) imgBlack.push(1)
+                else imgBlack.push(0)
+            }
+
+            var dataStr = JSON.stringify(imgBlack)
+            $.ajax({
+                type: "POST",
+                headers: {
+                'Authorization':'Basic xxxxxxxxxxxxx',
+                'X_CSRF_TOKEN':'xxxxxxxxxxxxxxxxxxxx',
+                'Content-Type':'application/json',
+                'Access-Control-Allow-Origin':'*'
+            },
+                url: "http://localhost:1111/predict",
+                data: dataStr,
+                processData: false,
+                success: function(msg) {
+                    document.getElementById("guessNumberDiv").innerHTML = msg
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(textStatus);
+                }
+            });
+        }
+    </script>

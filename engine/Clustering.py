@@ -1,11 +1,10 @@
 import numpy as np
-from algorithm import Algorithm
-
 import logging
+import json
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class Clustering(Algorithm):
+class Clustering():
     
     def __init__(self, sc, datasets, parameters):
         
@@ -41,17 +40,11 @@ class Clustering(Algorithm):
                 index += 1
         self.centroids = centroids
         self.clusters = clusters
-        print("The total number of data instances is: " + str(len(data)))
-        print("The total number of iterations necessary is: " + str(iterations))
-        print("The means of each cluster are: " + str(centroids))
-        print("Number of clusters: " + str(len(clusters)))
-        print("The clusters are as follows:")
-        for cluster in clusters:
-            print("Cluster with a size of " + str(len(cluster)) + " starts here:")
-            print(np.array(cluster).tolist())
-            print("Cluster ends here.")
-        self.plot()
-        return
+        logger.info("The total number of data instances is: " + str(len(data)))
+        logger.info("The total number of iterations necessary is: " + str(iterations))
+        logger.info("The means of each cluster are: " + str(centroids))
+        logger.info("Number of clusters: " + str(len(clusters)))
+        return self.plot()
 
     def euclidean_dist(self,data, centroids, clusters):
         for instance in data:  
@@ -84,7 +77,8 @@ class Clustering(Algorithm):
             return True
         return old_centroids == centroids
     
-    def predict(self,X):
+    def predict(self,params):
+        X =np.asarray(params['data'])
         distances = {}
         for i,centroid in enumerate(self.centroids):
             distances[i] = np.linalg.norm(X-centroid)
@@ -97,7 +91,7 @@ class Clustering(Algorithm):
         plt.xlabel(self.parameters['feature_col'][x])
         plt.ylabel(self.parameters['feature_col'][y])
         plt.scatter(points[:,x], points[:,y],c=label,s=10)
-        mpld3.show()
+        return json.dumps(mpld3.fig_to_dict(plt.figure()))
     
     def clusterize(self):
         points = []
@@ -107,3 +101,14 @@ class Clustering(Algorithm):
                 points.append(data)
                 label.append(i)
         return np.asarray(points),np.asarray(label)
+
+    def save(self,filename):
+        f = open(filename,"w")
+        json.dump(self.centroids,f)
+        f.close()
+        logger.info("Model saved")
+
+    def load(self,model):
+        f = open(model,"r")
+        data = json.load(f)
+        self.centroids = data

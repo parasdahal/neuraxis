@@ -1,24 +1,23 @@
 import os
-from pyspark.ml.recommendation import ALS
+from pyspark.ml.recommendation import ALS,ALSModel
 from pyspark.sql import Row,SQLContext
 from pyspark.sql.functions import *
 from pyspark.ml.evaluation import RegressionEvaluator
 import pandas as pd
 
-from algorithm import Algorithm
 
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class Recommendation(Algorithm):
+class Recommendation():
 
     def __init__(self, sc, datasets, parameters):
 
         logger.info("Initializing the Recommendation Engine")
         self.sc = sc
         self.sql = SQLContext(self.sc)
-
+        self.parameters = parameters
         ratings , meta = datasets
         logger.info("Loading Ratings data")
         self.ratings_df = self.sql.createDataFrame(ratings.to_pandas())
@@ -32,10 +31,11 @@ class Recommendation(Algorithm):
 
         logger.info("Training the ALS model...")
         
-        als = ALS(maxIter=1,regParam=0.1,userCol="userId",itemCol="movieId",ratingCol="rating")
+        als = ALS(maxIter=1,regParam=0.1,userCol=self.parameters['userCol'],itemCol=self.parameters['itemCol'],ratingCol=self.parameters['ratingCol'])
         self.model = als.fit(training)
         
         logger.info("ALS model built!")
+        return "{}"
 
     def _predict_ratings(self,user_item_df):
         """
@@ -72,3 +72,9 @@ class Recommendation(Algorithm):
         p = predictions.sort(desc("prediction")).filter(predictions.prediction != "NaN").limit(count)
         
         return p.toPandas().reset_index().to_json(orient='records')
+    
+    def save(self,filename):
+        self.model.save(filename)
+    
+    def load(self,filename):
+        self.model = ALSModel.load(filename)

@@ -1,9 +1,8 @@
 import numpy as np
 import random
-import math
+import math,sys
 import datetime
-from algorithm import Algorithm
-
+import json
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ class CrossEntropyCost:
     def delta(a,y):
         return (a-y)
 
-class FullyConnectedNN(Algorithm):
+class FullyConnectedNN():
 
     def __init__(self, sc, datasets, parameters):
         # TODO: Get datasets here and parallelize them into RDD
@@ -144,7 +143,7 @@ class FullyConnectedNN(Algorithm):
             evaluation_accuracy.append(accuracy_percent)
             logger.info("Accuracy on evaluation data: "+str(accuracy)+"/"+str(n_data)+" ("+str(accuracy_percent)+"%)")
         
-        self.plot(evaluation_cost,evaluation_accuracy,training_cost,training_accuracy)
+        return self.plot(evaluation_cost,evaluation_accuracy,training_cost,training_accuracy)
 
     def accuracy(self,data):
         """Returns the number of input in data for which neural network 
@@ -194,6 +193,33 @@ class FullyConnectedNN(Algorithm):
     
     def sigmoid_prime(self,z):
         return self.sigmoid(z)*(1-self.sigmoid(z))
+    
+    def save(self, filename):
+        """Save the neural network to the file"""
+        data = {"sizes": self.sizes,
+                "weights": [w.tolist() for w in self.weights],
+                "biases": [b.tolist() for b in self.biases],
+                "cost": str(self.cost.__name__)}
+        f = open(filename, "w")
+        json.dump(data, f)
+        f.close()
+        logger.info("Model saved")
+
+    def load(self,model):
+        f = open(model,"r")
+        data = json.load(f)
+        self.sizes = data["sizes"]
+        self.cost = getattr(sys.modules[__name__], data["cost"])
+        self.weights = [np.array(w) for w in data["weights"]]
+        self.biases = [np.array(b) for b in data["biases"]]
+
+    def predict(self,params):
+        image = params
+        input = np.reshape(image, (784, 1))
+        output = self.feed_forward(input)
+        print(output)
+        result = np.argmax(output)
+        return str(result)
     
     def plot(self,evaluation_cost,evaluation_accuracy,training_cost,training_accuracy):
         
@@ -247,7 +273,7 @@ class FullyConnectedNN(Algorithm):
         plt.xlabel("No of epochs")
         plt.ylabel("Accuracy")
         plt.tight_layout()
-        mpld3.show()
+        return json.dumps(mpld3.fig_to_dict(plt.figure()))
 
 
 

@@ -7,20 +7,23 @@ from pyspark import SparkContext, SparkConf
 from jsonschema import validate
 import time, sys, cherrypy
 from paste.translogger import TransLogger
-
-
+from peewee import *
+from models import Instance,TrainedModel
 import logging
 logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("Instance")
 
-class Instance:
+class InstanceController:
     
     ALGO_PATH = "engine"
     DATASETS_PATH = "storage"
+    CONFIG_PATH = "storage/config"
+    MODEL_PATH = os.path.join(os.path.dirname(__file__),"storage\models")
+    PORT = 1111
     
-    def __init__(self,path):
+    def __init__(self,config):
 
-        self.config = self._load_config(path)
+        self.config = config
     
     def init_spark_context(self):
 
@@ -28,27 +31,10 @@ class Instance:
         context = SparkContext(conf=conf)
         logger.info("Spark Context initialized")
         return context
- 
-    def _load_config(self,path):
-        
-        config_schema = {
-
-            "algorithm":{"type" : "string"},
-            "parameters":{"type" : "object"},
-            "datasets":[{"name":{"type" : "string"},"path":{"type" : "string"},"sanitizer":{"type" : "array"}}],
-            "routes":[{"name":{"type" : "string"},"route":{"type" : "string"}}]
-        }
-
-        with open(path) as json_data:
-            config = json.load(json_data)
-            validate(config,config_schema)
-            return config
-        
-        logger.info("Config file loaded")
 
     def start(self):
 
-        algo_path = Instance.ALGO_PATH+'.' + self.config['algorithm']
+        algo_path = InstanceController.ALGO_PATH+'.' + self.config['algorithm']
 
         module = importlib.import_module(algo_path)
         algorithm = getattr(module,self.config['algorithm'])
@@ -58,7 +44,7 @@ class Instance:
         datasets = []
         for item in self.config['datasets']:
             data = dataset.Dataset()
-            path = os.path.join(Instance.DATASETS_PATH,item['path'])
+            path = os.path.join(InstanceController.DATASETS_PATH,item['path'])
             if('type' in item.keys()):
                 if(item['type'] == "tsv"):
                     data.load_from_tsv(path)
@@ -80,8 +66,9 @@ class Instance:
         
     def train(self):
 
-        self.algo_instance.train()
-        logger.info("Training the instance")
+        visualization = self.algo_instance.train()
+        logger.info("Instance trained")
+        return visualization
 
     def serve(self):
 
@@ -102,20 +89,47 @@ class Instance:
             cherrypy.config.update({
                 'engine.autoreload.on':True,
                 'log.screen': True,
-                'server.socket_port': 8881,
+                'server.socket_port': InstanceController.PORT,
                 'server.socket_host': '0.0.0.0'
             })
             cherrypy.engine.start()
-            print("Server Started")
+            logger.info("Server Started on port "+str(InstanceController.PORT))
             cherrypy.engine.block()
         
         run_server(app)
+    
+    def load_model(self,model):
+        model = os.path.join(model)
+        self.algo_instance.load(model)
+        logger.info("Model loaded")
+    
+    def save_model(self,filename):
+        model = os.path.join(InstanceController.MODEL_PATH,filename)
+        self.algo_instance.save(model)
+        logger.info("Model saved")
+        return model
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("config", help="Path of the config file.")
+    parser.add_argument("name", help="Name of instance")
+    parser.add_argument("model_path", help="Command: stop, serve, train")
+    parser.add_argument("command", help="Command: stop, serve, train")
     args = parser.parse_args()
-    ins = Instance(args.config)
-    ins.start()
-    ins.train()
-    ins.serve()
+    if(args.command == "serve"):
+        i = Instance.select().where(Instance.name == args.name).get()
+        ins = InstanceController(json.loads(i.config))
+        ins.start()
+        ins.load_model(args.model_path)
+        logger.info("Model: "+args.model_path)
+        ins.serve()
+    if(args.command == "train"):
+        i = Instance.select().where(Instance.name == args.name).get()
+        ins = InstanceController(json.loads(i.config))
+        ins.start()
+        viz = ins.train()
+        path = ins.save_model(args.model_path)
+        m = TrainedModel(instance_id=i.id,path=path,visualization=viz)
+        m.save()
+        i.state = "TRAINED"
+        i.pid = 0
+        i.save()
