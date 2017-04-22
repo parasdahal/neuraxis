@@ -1,0 +1,30 @@
+@font-face {
+    font-family: 'FjallaOne';
+    src:url('FjallaOne.otf') format('OpenType');
+}
+
+.navbar {
+    margin-top: -20px;
+}
+
+
+.myhead {
+    font-family: FjallaOne;
+    padding-left:20px ;
+    font-size:60px; 
+    color: #3C3C3C;
+}
+
+.img-head {
+    margin-top: -20px;
+    max-height: 100px !important;
+}
+
+.container {
+    margin-top: 50px;
+}
+
+.ctitle {
+    font-family: FjallaOne;
+    font-size: 36px;
+}

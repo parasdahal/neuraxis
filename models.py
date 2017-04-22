@@ -1,13 +1,14 @@
 from peewee import *
 import datetime
 
-db = MySQLDatabase('neuraxis',user='root',passwd='')
+db = MySQLDatabase('neuraxis2',user='root',passwd='')
 
 class BaseModel(Model):
     class Meta:
         database = db
 
 class Instance(BaseModel):
+    user_id = IntegerField()
     name = CharField(unique=True)
     config = TextField()
     state = CharField()

@@ -136,7 +136,7 @@ class LogisticRegressionClassifier:
         plt.plot(x1, x2, color='r', label='decision boundary');
         plt.scatter(self.X[:, 1], self.X[:, 2], s=40, c=self.y, cmap=plt.cm.Spectral)
         plt.legend()
-        return json.dumps(mpld3.fig_to_dict(plt.figure()))
+        return mpld3.fig_to_html(plt.figure(),'/assets/d3.js','/assets/mpld3.js')
 
     def save(self,filename):
         f = open(filename,"w")

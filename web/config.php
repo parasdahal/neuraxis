@@ -1,0 +1,10 @@
+<?php
+$DB_HOST="localhost";
+$DB_NAME="neuraxis2";
+$DB_USERNAME="root";
+$DB_PASSWORD='';
+$PROJECT_ROOT="C:/Spark/spark/bin/neuraxis/web/";
+$CLASS_USER=$PROJECT_ROOT."user/user.php";
+$CLASS_CONNECTION=$PROJECT_ROOT."includes/conn.php";
+$CLASS_UTILITY=$PROJECT_ROOT."includes/utility.php";
+?>

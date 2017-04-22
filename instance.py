@@ -19,7 +19,7 @@ class InstanceController:
     DATASETS_PATH = "storage"
     CONFIG_PATH = "storage/config"
     MODEL_PATH = os.path.join(os.path.dirname(__file__),"storage\models")
-    PORT = 1111
+    PORT = 2221
     
     def __init__(self,config):
 

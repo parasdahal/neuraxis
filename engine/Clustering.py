@@ -91,7 +91,7 @@ class Clustering():
         plt.xlabel(self.parameters['feature_col'][x])
         plt.ylabel(self.parameters['feature_col'][y])
         plt.scatter(points[:,x], points[:,y],c=label,s=10)
-        return json.dumps(mpld3.fig_to_dict(plt.figure()))
+        return mpld3.fig_to_html(plt.figure(),'/assets/d3.js','/assets/mpld3.js')
     
     def clusterize(self):
         points = []

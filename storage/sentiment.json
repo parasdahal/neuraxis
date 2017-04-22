@@ -1,0 +1,17 @@
+{
+	"algorithm" : "SentimentClassifier",
+	"parameters" : {
+		"reviewCol":"review",
+		"labelCol":"label"
+	},
+	"datasets": [{
+			"name": "training",
+			"path": "train.tsv",
+			"type":"tsv"
+	}],
+	"routes": [{
+		"name": "predict",
+		"route": "/predict"
+	}]
+
+}

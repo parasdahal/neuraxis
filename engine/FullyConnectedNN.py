@@ -273,9 +273,5 @@ class FullyConnectedNN():
         plt.xlabel("No of epochs")
         plt.ylabel("Accuracy")
         plt.tight_layout()
-        return json.dumps(mpld3.fig_to_dict(plt.figure()))
-
-
-
-
+        return mpld3.fig_to_html(plt.figure(),'/assets/d3.js','/assets/mpld3.js')
 

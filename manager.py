@@ -1,4 +1,4 @@
-import os
+import os,sys
 import multiprocessing,argparse,json,psutil,datetime
 from subprocess import *
 from peewee import *
@@ -20,8 +20,7 @@ def get_args():
 
 def instance_state(ins):
     process = psutil.Process(ins.pid)
-    print("Process State: "+process.status())
-    print("Instance State :"+ins.state)
+    print(ins.state)
 
 def serve_instance(ins):
     model = ins.models.order_by(TrainedModel.id.desc()).get()
@@ -31,12 +30,12 @@ def serve_instance(ins):
     ins.state = "SERVING"
     ins.pid = process.pid
     ins.save()
-    print("Instance started with PID "+str(ins.pid))
+    print(str(ins.pid))
 
 def stop_instance(ins):
     ins= load_instance(ins.name)
     if ins.pid == 0:
-        print("Instance already stopped")
+        print("STOPPED")
         return
     try:    
         parent = psutil.Process(ins.pid)
@@ -45,11 +44,11 @@ def stop_instance(ins):
             child.kill()
         psutil.wait_procs(children, timeout=5)
     except(psutil.NoSuchProcess):
-        print("Process not found. Instance not running")
+        print("STOPPED")
     ins.state ="STOPPED"
     ins.pid =0
     ins.save()
-    print("Instance stopped")
+    print("STOPPED")
 
 def train_instance(ins):
     ins = load_instance(ins.name)
@@ -60,7 +59,7 @@ def train_instance(ins):
     ins.state = "TRAINING"
     ins.pid = process.pid
     ins.save()
-    print("Instance training started with PID "+str(ins.pid))
+    print(str(ins.pid))
 
 if __name__ == "__main__":
     
@@ -83,3 +82,4 @@ if __name__ == "__main__":
 
     if(args.command == "train"):
         train_instance(ins)
+    sys.exit()
